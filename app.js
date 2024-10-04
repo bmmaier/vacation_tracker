@@ -60,6 +60,7 @@ function storeNewVacation(startDate, endDate){
 }
 
 function getAllStoredVacations() {
+    // get vacation string form local storage
     const data = window.localStorage.getItem(STORAGE_KEY);
 
 
