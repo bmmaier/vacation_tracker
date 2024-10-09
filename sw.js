@@ -1,4 +1,4 @@
-const VERSION = "v2";
+const VERSION = "v3";
 
 //offline resource list
 const APP_STATIC_RESOURCES = [
@@ -83,27 +83,38 @@ self.addEventListener("fetch", (event)=>{
     );//respondWith
 });//fetch
 
-// send a message to the client - we will use to update data later
-function sendMessageToPWA(){
-    self.clients.matchAll().then((clinets) => {
-        clients.forEach((client) => {
-            client.postMessage(message);
-        });
-    });
-}
+// // send a message to the client - we will use to update data later
+// function sendMessageToPWA(){
+//     self.clients.matchAll().then((clinets) => {
+//         clients.forEach((client) => {
+//             client.postMessage(message);
+//         });
+//     });
+// }
 
-//send message evey 10 seconds, in milliseconds so 10,000 ms = 10 sec
-setInterval(()=>{
-    sendMessageToPWA({type: "update", data: "New data available"});
-}, 10000);
+// //send message evey 10 seconds, in milliseconds so 10,000 ms = 10 sec
+// setInterval(()=>{
+//     sendMessageToPWA({type: "update", data: "New data available"});
+// }, 10000);
 
-// listen for messages from the app
-self.addEventListener("message", (event)=>{
-    console.log("Service Worker received a message", event.data);
+// // listen for messages from the app
+// self.addEventListener("message", (event)=>{
+//     console.log("Service Worker received a message", event.data);
 
-    // you can respond back if needed
-    event.source.postMessage({
-        type: "response",
-        data: "Message received by service worker"
-    });
-});
+//     // you can respond back if needed
+//     event.source.postMessage({
+//         type: "response",
+//         data: "Message received by service worker"
+//     });
+// });
+
+// create a broadcast channel, name here needs to match name in app
+const channel = new BroadcastChannel("pwa_channel");
+
+//listen for messages
+channel.onmessage = (event) => {
+    console.log("Received message in Service Worker: ", event.data);
+
+    //echo message back to pwa
+    channel.postMessage("Service Worker received: " + event.data);
+};

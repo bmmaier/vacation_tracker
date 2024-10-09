@@ -123,24 +123,40 @@ if("ServiceWork" in navigator){
         });
 }
 
-//listen for messages from the service worker
-navigator.serviceWorker.addEventListener("message", (event)=>{
-    console.log("Received a message from the Service Worker:", event.data);
+// //listen for messages from the service worker
+// navigator.serviceWorker.addEventListener("message", (event)=>{
+//     console.log("Received a message from the Service Worker:", event.data);
 
-    //handle different message types
-    if(event.data.type === "update"){
-        console.log("Update Received", event.data.data);
-        //update UI or perform some action
-    }
-});
+//     //handle different message types
+//     if(event.data.type === "update"){
+//         console.log("Update Received", event.data.data);
+//         //update UI or perform some action
+//     }
+// });
 
-//function to send a message to Service Worker
-function sendMEssageToSW(message){
-    if (navigator.serviceWorker.controller){ //if client has been claimed
-        navigator.serviceWorker.controller.postMessage(message);
-    }
-}
+// //function to send a message to Service Worker
+// function sendMEssageToSW(message){
+//     if (navigator.serviceWorker.controller){ //if client has been claimed
+//         navigator.serviceWorker.controller.postMessage(message);
+//     }
+// }
 
+// document.getElementById("sendButton").addEventListener("click", ()=>{
+//     sendMEssageToSW({type: "action", data: "Button Clicked"});
+// });
+
+// create a broadcast channel, name here needs to match name in service worker
+const channel = new BroadcastChannel("pwa_channel");
+
+// listen for messages
+channel.onmessage = (event) => {
+    console.log("Received a Message in PWA:", event.data);
+    document.getElementById("messages").insertAdjacentHTML("beforeend", `<p>Received: ${event.data}</p>`);
+};
+
+//send a message when the button is clicked
 document.getElementById("sendButton").addEventListener("click", ()=>{
-    sendMEssageToSW({type: "action", data: "Button Clicked"});
+    const message = "Hello from PWA!";
+    channel.postMessage(message);
+    console.log("test")
 });
