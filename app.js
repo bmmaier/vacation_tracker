@@ -112,7 +112,7 @@ function formatDate(dateString){
 renderPastVacations();
 
 //register service worker (sw.js) with app
-if("ServiceWork" in navigator){
+if("serviceWorker" in navigator){
     navigator.serviceWorker
         .register("sw.js")
         .then((registration)=>{
@@ -158,5 +158,100 @@ channel.onmessage = (event) => {
 document.getElementById("sendButton").addEventListener("click", ()=>{
     const message = "Hello from PWA!";
     channel.postMessage(message);
-    console.log("test")
+    console.log("Sent message from PWA:", message);
 });
+/////////////////////////// 10-11-24 /////////////////////////////
+// open or create database
+let db;
+const dbName = "SyncDatabase";
+const request = indexedDB.open(dbName, 1); // doesnt open immediately, generates event
+request.onerror = function (event) {
+    console.error("Database error: " + event.target.error);
+};
+
+request.onsuccess = function (event) {
+    // now we have the database
+    db = event.target.result;
+    console.log("Database opened successfully");
+};
+
+request.onupgradeneeded = function (event) {
+    db = event.target.result;
+
+    // create any new object stores for db or delete any old ones from prev version
+    const objectStore = db.createObjectStore( "pending data", 
+        {
+            keyPath:"id",
+            autoIncrement: true
+        }
+    );
+};
+
+// add data to db, need a transaction to accomplish it
+function addDataToIndexedDB(data){ // Promise so that it is done in the background
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(["pendingData"], "readwrite"); // 2nd param is mode
+        const objectStore = transaction.objectStore("pendingData");
+        const request = objectStore.add({data: data});
+
+        request.onsuccess = function (event) {
+            resolve();
+        };
+
+        request.onerror = function (event) {
+            reject("Error storing data: " + event.target.error);
+        };
+
+    });
+}
+
+document.getElementById("dataForm").addEventListener("submit", function(event){
+    event.preventDefault(); // don't send to server, trying to make app work offline
+    
+    // get data
+    const data = document.getElementById("dataInput").value;
+
+    // check if we have serviceWorker AND syncManager available
+    if("serveWorker" in navigator && "SyncManager" in window){
+        // able to add data to the database for offline persistence
+        addDataToIndexedDB(data)
+            .then(()=>navigator.serviceWorker.ready) // wait for serviceWorker to be ready
+            .then((registration)=>{
+                // create a sync event for when device comes online
+                return registration.sync.register("send-data");
+            })
+            .then(()=>{
+                // update UI for successful registration, into <div id="status"></div> added to index.html added 10-11
+                document.getElementById("status").textContent = "Sync registered. Data will be sent when online.";
+            })
+            .catch((error)=>{
+                console.error("Error: " + error);
+            });
+    } else {
+        //background sync isnt supported try to send immediately
+        sendData(data)
+            .then((result)=>{
+                //update UI
+                document.getElementById("status").textContent = result;
+            })
+            .catch((result)=>{
+                //update UI
+                document.getElementById("status").textContent = error.message;
+            })
+    }
+});
+
+//simulate sending data
+function sendData(data) {
+    console.log("Attempting to send data: " + data);
+
+    return new Promise((resolve, reject)=>{
+        setTimeout(()=>{
+            if(Math.random() > 0.5){
+                resolve("Data sent successfully");
+            } else {
+                reject(new Error("Failed to send data"));
+            }
+        }, 10000);
+    });
+}

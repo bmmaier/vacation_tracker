@@ -21,7 +21,7 @@
             console.log("service worker registration successful:", registration);
           },
           (error) =>{
-            console.error("service worker registration failed:", registration);
+            console.error("service worker registration failed:", error);
           }
         )
       } else {
@@ -51,6 +51,15 @@
 
     <div id="messages">
         <button id="sendButton">Send A Message</button>
+    </div>
+
+    <form id="dataForm">
+      <input type="text" id="dataText" placeholder="Data to send"/>
+      <button type="submit">Send Data</button>
+    </form>
+
+    <div id="status">
+
     </div>
 
     <script src="app.js" defer></script>

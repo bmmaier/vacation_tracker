@@ -1,4 +1,4 @@
-const VERSION = "v3";
+const VERSION = "v4";
 
 //offline resource list
 const APP_STATIC_RESOURCES = [
@@ -118,3 +118,83 @@ channel.onmessage = (event) => {
     //echo message back to pwa
     channel.postMessage("Service Worker received: " + event.data);
 };
+////////////////////////// 10-11 ////////////////////////////////
+// open or create database
+let db;
+const dbName = "SyncDatabase";
+const request = indexedDB.open(dbName, 1); // doesnt open immediately, generates event // name and version needs to match app.js
+request.onerror = function (event) {
+    console.error("Database error: " + event.target.error);
+};
+
+request.onsuccess = function (event) {
+    // now we have the database
+    db = event.target.result;
+    console.log("Database opened successfully in service worker");
+};
+
+self.addEventListener("sync", function(event){
+    if(event.tag === "send-data"){
+        event.waitUntil(sendDataToServer());
+    }
+});
+
+function sendDataToServer(){
+    return getAllPendingData()
+        .then(function (datalist){
+            return Promise.all(
+                dataList.map(function(item){
+                    // sim sending data to server
+                    return new Promise((resolve, reject) =>{
+                        setTimeout(()=>{
+                            if(Math.random() > 0.1){
+                                // 90% success rate
+                                resolve("Data sent successfully");
+                            } else {
+                                console.log("Failed to send data:", item.data);
+                                reject(new Error("Failed to send data"));
+                            }
+                        }, 1000);
+                    })
+                    .then(function(){
+                        // if successful, remove item from database
+                        return removeDataFromIndexDB(item.id);
+                    })
+                })
+            )
+        })
+}
+
+function getAllPendingData(){
+    return new Promise ((resolve, reject) => {
+        //transaction to read data from db
+        const transaction = db.transaction(["pendingData"], "readOnly");
+        const objectStore = transaction.objectStore("pendingData");
+        const request =  objectStore.getAll(); //where you get the .onsuccess and .onerror
+
+        request.onsuccess = function(event) {
+            resolve(event.target.result);
+        };
+
+        //sending back the error message
+        request.onerror = function(event) {
+            reject("Error fetching data: " + event.target.error);
+        }
+    })
+}
+
+function removeDataFromIndexedDB(id) {
+    return new Promise((resolve, reject) => {
+          const transaction = db.transaction(["pendingData"], "readwrite");
+          const objectStore = transaction.objectStore("pendingData");
+          const request = objectStore.delete(id);
+
+           request.onsuccess = function (event) {
+                 resolve();
+           };
+
+           request.onerror = function (event) {
+               reject("Error removing data: " + event.target.error);
+          };
+      });
+}
