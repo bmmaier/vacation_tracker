@@ -1,4 +1,4 @@
-const VERSION = "v4";
+const VERSION = "v5";
 
 //offline resource list
 const APP_STATIC_RESOURCES = [

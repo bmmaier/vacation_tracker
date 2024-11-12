@@ -1,7 +1,7 @@
 {
     "name" : "VacationTracker: Vacation Tracker App",
     "short_name" : "VT",
-    "description" : "Securely and Confidentially Track Your Vacations. Enter the start and end dates. These willbe saved        in your browser only and won't be shared.",
+    "description" : "Securely and Confidentially Track Your Vacations. Enter the start and end dates. These will be saved        in your browser only and won't be shared.",
     "start_url" : "https://bmmaier.github.io/vacation_tracker/",
     "display" : "standalone",
     "theme_color" : "#eeffee",
